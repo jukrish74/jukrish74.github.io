@@ -1,0 +1,125 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SHM Oscillator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 20px;
+    }
+    .output {
+      margin: 10px 0;
+      font-size: 1.2em;
+    }
+    .oscillator {
+      position: relative;
+      margin: 20px auto;
+      width: 600px;
+      height: 100px;
+      background-color: #f0f0f0;
+      border: 2px solid #ccc;
+    }
+    .circle {
+      position: absolute;
+      top: 35px;
+      width: 30px;
+      height: 30px;
+      background-color: #0078d4;
+      border-radius: 50%;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>SHM Oscillator</h1>
+  <div class="oscillator">
+    <div class="circle" id="circle"></div>
+  </div>
+  <div class="output" id="displacement">Displacement: 0 m</div>
+  <div class="output" id="velocity">Velocity: 0 m/s</div>
+  <div class="output" id="acceleration">Acceleration: 0 m/s²</div>
+  <div class="output" id="restoring-force">Restoring Force: 0 N</div>
+  <div class="output" id="kinetic-energy">Kinetic Energy: 0 J</div>
+  <div class="output" id="potential-energy">Potential Energy: 0 J</div>
+  <button id="pauseButton">Pause</button>
+
+  <script>
+    // Constants
+    const amplitude = 5; // m
+    const timePeriod = 50; // s
+    const mass = 1; // kg
+    const omega = (2 * Math.PI) / timePeriod; // Angular frequency (rad/s)
+    const k = Math.pow(omega, 2) * mass; // Spring constant (N/m)
+    const interval = 50; // Update interval (ms)
+    const scale = 50; // Scaling factor for visual animation
+
+    // Elements for display and animation
+    const displacementElement = document.getElementById("displacement");
+    const velocityElement = document.getElementById("velocity");
+    const accelerationElement = document.getElementById("acceleration");
+    const restoringForceElement = document.getElementById("restoring-force");
+    const kineticEnergyElement = document.getElementById("kinetic-energy");
+    const potentialEnergyElement = document.getElementById("potential-energy");
+    const circle = document.getElementById("circle");
+    const pauseButton = document.getElementById("pauseButton");
+
+    let time = 0; // Initial time
+    let isPaused = false; // Pause control
+
+    function updateValues() {
+      if (isPaused) return;
+
+      // Displacement (x = A * cos(ωt))
+      const displacement = amplitude * Math.cos(omega * time);
+
+      // Velocity (v = -Aω * sin(ωt))
+      const velocity = -amplitude * omega * Math.sin(omega * time);
+
+      // Acceleration (a = -Aω² * cos(ωt))
+      const acceleration = -amplitude * Math.pow(omega, 2) * Math.cos(omega * time);
+
+      // Restoring Force (F = -kx)
+      const restoringForce = -k * displacement;
+
+      // Kinetic Energy (KE = 0.5 * m * v^2)
+      const kineticEnergy = 0.5 * mass * Math.pow(velocity, 2);
+
+      // Potential Energy (PE = 0.5 * k * x^2)
+      const potentialEnergy = 0.5 * k * Math.pow(displacement, 2);
+
+      // Update the displayed values
+      displacementElement.textContent = `Displacement: ${displacement.toFixed(2)} m`;
+      velocityElement.textContent = `Velocity: ${velocity.toFixed(2)} m/s`;
+      accelerationElement.textContent = `Acceleration: ${acceleration.toFixed(2)} m/s²`;
+      restoringForceElement.textContent = `Restoring Force: ${restoringForce.toFixed(2)} N`;
+      kineticEnergyElement.textContent = `Kinetic Energy: ${kineticEnergy.toFixed(2)} J`;
+      potentialEnergyElement.textContent = `Potential Energy: ${potentialEnergy.toFixed(2)} J`;
+
+      // Animate the circle (scaled displacement)
+      const position = (displacement * scale) + 300; // Center the animation
+      circle.style.left = `${position}px`;
+
+      // Increment time
+      time += interval / 1000; // Convert ms to seconds
+    }
+
+    // Pause button functionality
+    pauseButton.addEventListener("click", () => {
+      isPaused = !isPaused;
+      pauseButton.textContent = isPaused ? "Resume" : "Pause";
+    });
+
+    // Update values at regular intervals
+    setInterval(updateValues, interval);
+  </script>
+</body>
+</html>
