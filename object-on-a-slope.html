@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cube Sliding Down Slope</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    canvas {
+      border: 1px solid black;
+      margin: 20px auto;
+      display: block;
+    }
+    .controls {
+      margin: 20px;
+    }
+    .slider-container {
+      margin: 10px 0;
+    }
+    .button-container {
+      margin: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Cube Sliding Down Slope</h1>
+  <canvas id="slopeCanvas" width="500" height="400"></canvas>
+  <div class="controls">
+    <div class="slider-container">
+      <label for="massSlider">Mass (kg): <span id="massValue">5</span></label>
+      <input id="massSlider" type="range" min="1" max="50" step="1" value="5">
+    </div>
+    <div class="slider-container">
+      <label for="angleSlider">Angle (°): <span id="angleValue">30</span></label>
+      <input id="angleSlider" type="range" min="0" max="90" step="1" value="30">
+    </div>
+    <div>
+      <p>Resultant Force: <span id="forceValue">0</span> N</p>
+      <p>Acceleration: <span id="accelerationValue">0</span> m/s²</p>
+    </div>
+  </div>
+  <div class="button-container">
+    <button id="pauseButton">Pause</button>
+    <button id="resumeButton">Resume</button>
+    <button id="resetButton">Reset</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('slopeCanvas');
+    const ctx = canvas.getContext('2d');
+    const massSlider = document.getElementById('massSlider');
+    const angleSlider = document.getElementById('angleSlider');
+    const massValue = document.getElementById('massValue');
+    const angleValue = document.getElementById('angleValue');
+    const forceValue = document.getElementById('forceValue');
+    const accelerationValue = document.getElementById('accelerationValue');
+    const pauseButton = document.getElementById('pauseButton');
+    const resumeButton = document.getElementById('resumeButton');
+    const resetButton = document.getElementById('resetButton');
+
+    const g = 9.8; // Gravitational acceleration (m/s²)
+    const frictionCoefficient = 0.3;
+    let cubePosition = 300; // Cube position along the slope (in pixels)
+    let cubeVelocity = 0; // Velocity of the cube
+    let animationRunning = true; // State to manage animation
+
+    function drawSlope(angle) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw slope
+      ctx.save();
+      ctx.translate(100, 300); // Set bottom-left as the base of the slope
+      ctx.rotate((-angle * Math.PI) / 180); // Rotate canvas for slope angle
+      ctx.fillStyle = 'gray';
+      ctx.fillRect(0, 0, 300, 10); // Draw the slope
+
+      // Draw cube
+      ctx.fillStyle = 'blue';
+      ctx.fillRect(cubePosition, -20, 40, 40); // Cube on the slope
+      ctx.restore();
+    }
+
+    function calculateForces(mass, angle) {
+      const weight = mass * g;
+      const normalForce = weight * Math.cos((angle * Math.PI) / 180);
+      const frictionForce = frictionCoefficient * normalForce;
+      const downhillForce = weight * Math.sin((angle * Math.PI) / 180);
+      const resultantForce = downhillForce - frictionForce;
+      const acceleration = resultantForce > 0 ? resultantForce / mass : 0;
+
+      return { resultantForce, acceleration };
+    }
+
+    function update() {
+      if (!animationRunning) return; // Stop updating if animation is paused
+
+      const mass = parseFloat(massSlider.value);
+      const angle = parseFloat(angleSlider.value);
+
+      massValue.textContent = mass;
+      angleValue.textContent = angle;
+
+      const { resultantForce, acceleration } = calculateForces(mass, angle);
+      forceValue.textContent = resultantForce.toFixed(2);
+      accelerationValue.textContent = acceleration.toFixed(2);
+
+      // Move the cube downwards along the slope
+      if (acceleration > 0) {
+        cubeVelocity += -(acceleration * 0.05); // Increment velocity
+        cubePosition += cubeVelocity; // Update position along the slope
+      }
+
+      // Keep the cube within the slope's bounds
+      if (cubePosition < 0) {
+        cubePosition = 0; // Stop at the end of the slope
+        cubeVelocity = 0;
+      }
+
+      drawSlope(angle);
+    }
+
+    function resetAnimation() {
+      animationRunning = true
+      cubePosition = 300; // Reset cube position
+      cubeVelocity = 0; // Reset velocity
+      update(); // Update to redraw slope and reset cube position
+      animationRunning = false; // Pause animation
+    }
+
+    pauseButton.addEventListener('click', () => {
+      animationRunning = false;
+    });
+
+    resumeButton.addEventListener('click', () => {
+      animationRunning = true;
+    });
+
+    resetButton.addEventListener('click', resetAnimation);
+
+    massSlider.addEventListener('input', update);
+    angleSlider.addEventListener('input', update);
+
+    setInterval(update, 50); // Update the animation every 50ms
+  </script>
+</body>
+</html>
