@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monty Hall Paradox</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        .doors button {
+            margin: 10px;
+            padding: 20px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .doors button.selected {
+            background-color: lightblue;
+            color: white;
+        }
+
+        .doors button.revealed {
+            background-color: lightgray;
+            cursor: not-allowed;
+        }
+
+        .image-container {
+            margin: 20px 0;
+        }
+
+        img {
+            max-width: 100px;
+        }
+
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        #tally {
+            margin-top: 20px;
+            border-collapse: collapse;
+            width: 70%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #tally th, #tally td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        #tally th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        .btn-restart {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+        }
+
+        .btn-choice {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            background-color: #008CBA;
+            color: white;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Monty Hall Paradox</h1>
+    <p>Pick a door to start:</p>
+    <div class="doors">
+        <button id="door1">Door 1</button>
+        <button id="door2">Door 2</button>
+        <button id="door3">Door 3</button>
+    </div>
+    <div class="image-container" id="images"></div>
+    <p id="result"></p>
+    <div id="choices" style="display: none;">
+        <button class="btn-choice" onclick="stickWithOriginal()">Stick</button>
+        <button class="btn-choice" onclick="switchDoor()">Switch</button>
+    </div>
+    <button class="btn-restart" onclick="startGame()">Try Again</button>
+    <table id="tally">
+        <thead>
+            <tr>
+                <th>Attempt</th>
+                <th>Result</th>
+                <th>Choice</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    <script>
+        let doors = [];
+        let selectedDoor = null;
+        let montyReveal = null;
+        let remainingDoor = null;
+        let attemptCount = 0;
+        let userChoice = ""; // To store Stick or Switch
+
+        function shuffleDoors() {
+            doors = ["goat", "goat", "car"];
+            for (let i = doors.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [doors[i], doors[j]] = [doors[j], doors[i]];
+            }
+        }
+
+        function startGame() {
+            selectedDoor = null;
+            montyReveal = null;
+            remainingDoor = null;
+            userChoice = "";
+            document.getElementById("result").textContent = "";
+            document.getElementById("images").innerHTML = "";
+            document.getElementById("choices").style.display = "none";
+            document.querySelectorAll(".doors button").forEach(button => {
+                button.disabled = false;
+                button.textContent = button.id.replace("door", "Door ");
+                button.classList.remove("selected", "revealed");
+            });
+            shuffleDoors();
+        }
+
+        document.querySelectorAll('.doors button').forEach((button, index) => {
+            button.addEventListener('click', () => {
+                if (!selectedDoor) {
+                    selectedDoor = index;
+                    button.classList.add("selected");
+                    montyRevealDoor();
+                }
+            });
+        });
+
+        function montyRevealDoor() {
+            montyReveal = doors.findIndex((item, index) => index !== selectedDoor && item === "goat");
+            const revealButton = document.getElementById(`door${montyReveal + 1}`);
+            revealButton.textContent = "Goat";
+            revealButton.classList.add("revealed");
+            revealButton.disabled = true;
+            displayImage("goat", montyReveal + 1);
+            remainingDoor = doors.findIndex((item, index) => index !== selectedDoor && index !== montyReveal);
+            document.getElementById("choices").style.display = "block";
+        }
+
+        function stickWithOriginal() {
+            userChoice = "Stick";
+            revealResult(selectedDoor);
+        }
+
+        function switchDoor() {
+            userChoice = "Switch";
+            document.querySelector('.doors button.selected').classList.remove("selected");
+            selectedDoor = remainingDoor;
+            document.getElementById(`door${selectedDoor + 1}`).classList.add("selected");
+            revealResult(selectedDoor);
+        }
+
+        function displayImage(type, doorNumber) {
+            const imagesContainer = document.getElementById("images");
+            const image = document.createElement("img");
+            image.src = type === "goat" ? "goat.jpg" : "car.jpg";
+            image.alt = type === "goat" ? "Goat" : "Car";
+            imagesContainer.innerHTML = `Door ${doorNumber}: <br>`;
+            imagesContainer.appendChild(image);
+        }
+
+        function revealResult(selected) {
+            displayImage(doors[selected], selected + 1);
+            const resultMessage = doors[selected] === "car" 
+                ? "Congratulations! You won the car!" 
+                : "You got a goat. Better luck next time!";
+            document.getElementById('result').textContent = resultMessage;
+            updateTally(doors[selected], userChoice);
+        }
+
+        function updateTally(result, choice) {
+            attemptCount++;
+            const tableBody = document.querySelector("#tally tbody");
+            const row = document.createElement("tr");
+            const attemptCell = document.createElement("td");
+            const resultCell = document.createElement("td");
+            const choiceCell = document.createElement("td");
+            attemptCell.textContent = attemptCount;
+            resultCell.textContent = result === "car" ? "Car" : "Goat";
+            choiceCell.textContent = choice;
+            row.appendChild(attemptCell);
+            row.appendChild(resultCell);
+            row.appendChild(choiceCell);
+            tableBody.appendChild(row);
+        }
+
+        // Start the game initially
+        shuffleDoors();
+    </script>
+</body>
+</html>
